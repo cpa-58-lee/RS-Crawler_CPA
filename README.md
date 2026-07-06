@@ -31,7 +31,8 @@
 > ⚠️ 크롬(Chrome) 브라우저가 설치되어 있어야 합니다.
 
 <!-- 스크린샷: 릴리스 페이지에서 exe 다운로드 -->
-`[스크린샷 1] Releases 페이지 — 회생사건조회.exe 다운로드`
+<img width="977" height="542" alt="image" src="https://github.com/user-attachments/assets/1f7605ca-7bdd-4074-b073-7da14d6e3d11" />
+
 
 ---
 
@@ -58,7 +59,9 @@
 - 붙여넣으면 아래 미리보기 표에 인식된 사건이 나타나고, "○건 인식됨"이 표시됩니다.
 
 <!-- 스크린샷: 엑셀 표 붙여넣기 후 미리보기 -->
-`[스크린샷 3] 표 붙여넣기 → 미리보기 자동 표시`
+<img width="1072" height="751" alt="image" src="https://github.com/user-attachments/assets/e3b73912-54d4-4d72-89eb-c76c6170e650" />
+<img width="520" height="614" alt="image" src="https://github.com/user-attachments/assets/824fc8f5-26e1-43dd-a2eb-730ccc3b960a" />
+
 
 ### 3단계 — 당사자명 확인
 
@@ -73,7 +76,8 @@
 3. 오른쪽 화면에서 **실시간 진행률 · 성공/오류 건수 · 진행 로그**를 볼 수 있습니다.
 
 <!-- 스크린샷: 조회 진행 중 화면 -->
-`[스크린샷 4] 조회 진행 중 — 실시간 로그와 진행률`
+<img width="514" height="620" alt="image" src="https://github.com/user-attachments/assets/ded6c565-34a0-48db-9d28-0403fada8701" />
+
 
 > 조회하는 동안 크롬 창이 자동으로 움직입니다. **마우스나 키보드를 건드리지 마세요.**
 
@@ -83,7 +87,8 @@
 **[폴더 열기]** 를 누르면 결과 엑셀 파일이 있는 폴더가 열립니다.
 
 <!-- 스크린샷: 완료 팝업 -->
-`[스크린샷 5] 완료 — 결과 파일 저장 위치 안내`
+
+<img width="937" height="573" alt="image" src="https://github.com/user-attachments/assets/ed5dc7bc-58b8-419c-83cf-bfdcd8b187f9" />
 
 ---
 
@@ -108,7 +113,8 @@
   진행내용 전체와 원본 글자색이 그대로 보존되어 있습니다.
 
 <!-- 스크린샷: 결과 엑셀 총괄표 -->
-`[스크린샷 6] 결과 엑셀 — 회생차주 총괄표`
+<img width="1379" height="1005" alt="image" src="https://github.com/user-attachments/assets/66124de9-3658-4535-a7a7-f869aa3ca93d" />
+
 
 ---
 
