@@ -1,0 +1,49 @@
+name: Build Windows EXE
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 의존성 설치
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: 인증 키 주입
+        shell: pwsh
+        run: |
+          "VERIFY_API_KEY = '${{ secrets.VERIFY_API_KEY }}'" | Out-File -FilePath _key.py -Encoding utf8
+
+      - name: EXE 빌드
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --name "회생사건조회" --hidden-import _key app.py
+
+      - name: 빌드 결과 업로드 (Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: 회생사건조회-windows
+          path: dist/회생사건조회.exe
+
+      - name: 릴리스에 exe 첨부
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/회생사건조회.exe
+          tag_name: v1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
