@@ -76,6 +76,7 @@
 3. 오른쪽 화면에서 **실시간 진행률 · 성공/오류 건수 · 진행 로그**를 볼 수 있습니다.
 
 <!-- 스크린샷: 조회 진행 중 화면 -->
+<img width="937" height="573" alt="image" src="https://github.com/user-attachments/assets/ed5dc7bc-58b8-419c-83cf-bfdcd8b187f9" />
 <img width="514" height="620" alt="image" src="https://github.com/user-attachments/assets/ded6c565-34a0-48db-9d28-0403fada8701" />
 
 
@@ -88,7 +89,7 @@
 
 <!-- 스크린샷: 완료 팝업 -->
 
-<img width="937" height="573" alt="image" src="https://github.com/user-attachments/assets/ed5dc7bc-58b8-419c-83cf-bfdcd8b187f9" />
+
 
 ---
 
