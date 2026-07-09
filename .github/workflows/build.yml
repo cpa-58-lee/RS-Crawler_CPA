@@ -35,23 +35,23 @@ jobs:
 
       - name: EXE 빌드
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "회생사건조회" --hidden-import _key --collect-all selenium --collect-all webdriver_manager --collect-all twocaptcha app.py
+          pyinstaller --noconfirm --onefile --windowed --name "Restructuring_Crawler" --icon app.ico --hidden-import _key --collect-all selenium --collect-all webdriver_manager --collect-all twocaptcha app.py
 
       - name: 빌드 결과 업로드 (Artifacts)
         uses: actions/upload-artifact@v4
         with:
-          name: 회생사건조회-windows
-          path: dist/회생사건조회.exe
+          name: Restructuring_Crawler-windows
+          path: dist/Restructuring_Crawler.exe
 
       - name: 릴리스 생성 (태그 push 시)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/회생사건조회.exe
+          files: dist/Restructuring_Crawler.exe
           body: |
             ## 회생사건 자동조회 프로그램
 
-            아래 회생사건조회.exe 를 다운로드해 실행하세요.
+            아래 Restructuring_Crawler.exe 를 다운로드해 실행하세요.
             (Windows 전용 · 설치 불필요)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
