@@ -22,7 +22,10 @@
 ## 설치 (딱 1번)
 
 1. 이 페이지 오른쪽 **[Releases]** 를 클릭합니다.
+<img width="1510" height="1160" alt="image" src="https://github.com/user-attachments/assets/2ab106cc-9a2a-4b72-bc52-ac3a3724411c" />
+
 2. 최신 버전의 **`회생사건조회.exe`** 를 다운로드합니다.
+ <img width="977" height="542" alt="image" src="https://github.com/user-attachments/assets/1f7605ca-7bdd-4074-b073-7da14d6e3d11" />
 3. 끝입니다. **설치 과정 없이 더블클릭으로 바로 실행**됩니다.
 
 > ⚠️ Windows에서 "알 수 없는 게시자" 경고가 뜨면
@@ -31,7 +34,6 @@
 > ⚠️ 크롬(Chrome) 브라우저가 설치되어 있어야 합니다.
 
 <!-- 스크린샷: 릴리스 페이지에서 exe 다운로드 -->
-<img width="977" height="542" alt="image" src="https://github.com/user-attachments/assets/1f7605ca-7bdd-4074-b073-7da14d6e3d11" />
 
 
 ---
