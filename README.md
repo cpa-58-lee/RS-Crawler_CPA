@@ -24,7 +24,7 @@
 1. 이 페이지 오른쪽 **[Releases]** 를 클릭합니다.
 <img width="1510" height="1160" alt="image" src="https://github.com/user-attachments/assets/2ab106cc-9a2a-4b72-bc52-ac3a3724411c" />
 
-2. 최신 버전의 **`회생사건조회.exe`** 를 다운로드합니다.
+2. 최신 버전의 **`Restructuring_Crawler.exe`** 를 다운로드합니다.
  <img width="977" height="542" alt="image" src="https://github.com/user-attachments/assets/1f7605ca-7bdd-4074-b073-7da14d6e3d11" />
  
 3. 끝입니다. **설치 과정 없이 더블클릭으로 바로 실행**됩니다.
