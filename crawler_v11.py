@@ -1,10 +1,11 @@
 """
-대법원 회생사건 자동 조회 크롤러 v11
+대법원 회생사건 자동 조회 크롤러 v11.2
 - 자동입력방지문자(보안문자) 자동 해제
 - 진행내용 전체 파싱 + 글자색 반영 + 분류 컬럼(v11.1)
 - 플래그 자동 분류 (v11: 13개 -> 17개 항목으로 확대)
 - 조회일시/결과 5행 표시
 - 맨 앞 "회생차주 총괄표" 시트 자동 생성 (주요 일정 + 진행상황)
+- 총괄표 진행상황 산정 기준 변경: 종국결과 > 인가결정 > 개시결정 > 개시신청
 - 파산(하합/하단)·개인회생(개회) 사건번호 지원
 설치: pip install selenium openpyxl 2captcha-python webdriver-manager python-dotenv pandas
 .env_verify: VERIFY_API_KEY=실제키입력
@@ -70,30 +71,25 @@ FLAG_COLS = [
     "세금납부허가", "신탁담보변경",
 ]
 
-# ★ v11.1: 진행내용 헤더에 "분류" 컬럼 추가
 FLAG_HEADER_COLS = ["분류", "당부사항", "열람대상"] + FLAG_COLS
 
-# ★ v11.1: 글자색 RGB -> 분류 매핑
 COLOR_CATEGORY = {
-    "0000CC66": "송달", "00CC6600": "송달",   # 주황
-    "00660000": "제출서류",                   # 갈색
-    "00336633": "명령",                       # 초록
-    "00000000": "공고",                       # 검정
-    "00003399": "기일", "000033FF": "기일",   # 파랑
+    "0000CC66": "송달", "00CC6600": "송달",
+    "00660000": "제출서류",
+    "00336633": "명령",
+    "00000000": "공고",
+    "00003399": "기일", "000033FF": "기일",
 }
 
 
 def categorize_color(rgb_str):
-    """rgb(r,g,b) 문자열 또는 hex를 받아 분류 반환."""
     hexc = rgb_to_hex(rgb_str)
-    # 주요 색 근사 매칭
     table = {
         "CC6600": "송달", "660000": "제출서류",
         "336633": "명령", "000000": "공고", "003399": "기일",
     }
     if hexc in table:
         return table[hexc]
-    # 근사: 각 채널로 가장 가까운 분류 추정
     try:
         r = int(hexc[0:2], 16); g = int(hexc[2:4], 16); b = int(hexc[4:6], 16)
     except Exception:
@@ -706,36 +702,108 @@ def _parse_date_tuple(s):
     return tuple(int(x) for x in m[:3]) if len(m) >= 3 else (0, 0, 0)
 
 
-# ★ v11.1: 진행상황 도출 — 검정색(공고 분류) 행 중 신청서접수 제외, 가장 늦은 날의 내용
-def derive_progress_status(progress):
-    """공고 분류(검정) 행 중 '신청서접수' 제외, 가장 늦은 날짜의 내용에서 '공고'/'종국:' 제거."""
-    cands = []
-    for p in progress:
+def _clean_terminal_status(s):
+    """종국결과를 총괄표 C열 표준값으로 정리한다."""
+    raw = str(s or "").strip()
+    t = _ns(raw)
+    if not t:
+        return ""
+    t = re.sub(r"^종국[:：]?", "", t)
+    if "기각" in t:
+        return "기각"
+    if "각하" in t:
+        return "각하"
+    if "취하" in t:
+        return "취하"
+    if "폐지" in t:
+        return "폐지"
+    if "종결" in t:
+        return "종결"
+    return raw
+
+
+def _is_non_decision_noise(content_ns):
+    """법원 결정 자체가 아닌 신청/제출/송달성 이벤트인지 판단한다."""
+    noise_tokens = [
+        "신청서", "의견서", "요청", "송달", "도달", "발송",
+        "에게", "제출", "보정", "항고장", "허가신청"
+    ]
+    return any(t in content_ns for t in noise_tokens)
+
+
+def _has_decision_keyword(content_ns, keyword):
+    """신청/제출/송달 문구를 배제하고 결정 키워드 존재 여부를 판단한다."""
+    return keyword in content_ns and not _is_non_decision_noise(content_ns)
+
+
+def derive_progress_status(progress, basic=None):
+    """총괄표 C열용 진행상황 도출.
+    우선순위: 1.종국결과 2.인가결정 3.개시결정 4.개시신청"""
+    basic = basic or {}
+
+    terminal_from_basic = _clean_terminal_status(basic.get("종국결과", ""))
+    if terminal_from_basic:
+        return terminal_from_basic
+
+    rows = []
+    for p in progress or []:
         일자 = p[0] if len(p) > 0 else ""
         내용 = p[1] if len(p) > 1 else ""
+        결과 = p[2] if len(p) > 2 else ""
         rgb  = p[4] if len(p) > 4 else "rgb(0,0,0)"
-        if not 내용:
+
+        c = _ns(내용)
+        r = _ns(결과)
+        if not c and not r:
             continue
-        if categorize_color(rgb) != "공고":
-            continue
-        if "신청서접수" in _ns(내용):
-            continue
-        cands.append((_parse_date_tuple(일자), str(내용).strip()))
-    if not cands:
+
+        rows.append({
+            "일자": str(일자 or "").strip(),
+            "내용": str(내용 or "").strip(),
+            "내용_ns": c,
+            "결과_ns": r,
+            "분류": categorize_color(rgb),
+        })
+
+    if not rows:
         return "미확인"
-    cands.sort(key=lambda x: x[0])
-    val = cands[-1][1]
-    # "종국 : 기각" → "기각"
-    val = re.sub(r'^\s*종국\s*[:：]\s*', '', val)
-    # "공고" 글자 제거
-    val = val.replace("공고", "").strip()
-    return val if val else "미확인"
+
+    for row in reversed(rows):
+        c = row["내용_ns"]
+        if c.startswith("종국:") or c.startswith("종국：") or c.startswith("종국"):
+            terminal = _clean_terminal_status(c)
+            if terminal:
+                return terminal
+
+    terminal_patterns = [
+        ("기각결정", "기각"),
+        ("각하결정", "각하"),
+        ("취하허가결정", "취하"),
+        ("폐지결정", "폐지"),
+        ("종결결정", "종결"),
+        ("기각", "기각"),
+        ("각하", "각하"),
+    ]
+    for row in reversed(rows):
+        c = row["내용_ns"]
+        for kw, label in terminal_patterns:
+            if _has_decision_keyword(c, kw):
+                return label
+
+    for row in reversed(rows):
+        c = row["내용_ns"]
+        if "회생계획" in c and _has_decision_keyword(c, "인가결정"):
+            return "인가결정"
+
+    for row in reversed(rows):
+        c = row["내용_ns"]
+        if _has_decision_keyword(c, "개시결정"):
+            return "개시결정"
+
+    return "개시신청"
 
 
 def build_summary_sheet(wb, cases, results):
-    """맨 앞에 '회생차주 총괄표' 시트 생성.
-    A:일련번호 B:차주명 C:진행상황 D:법원 E:사건번호
-    F:신청일 G:보전처분 H:개시결정 I:시부인 J:조사보고서 K:회생계획안 L:인가/폐지"""
     ws = wb.create_sheet(title=SUMMARY_SHEET_NAME, index=0)
 
     headers = ["차주일련번호", "차주명(실명)", "진행상황", "관할법원", "회생사건번호",
@@ -744,10 +812,9 @@ def build_summary_sheet(wb, cases, results):
                "인가일 / 폐지(종결)일"]
 
     header_fill = PatternFill(fill_type="solid", fgColor="999999")
-    header_font = Font(name="맑은 고딕", size=10, bold=True, color="FFFFFF")
-    body_font   = Font(name="맑은 고딕", size=10)
-    warn_font   = Font(name="맑은 고딕", size=10, color="C00000")
-    stage_font  = Font(name="맑은 고딕", size=10, bold=True)
+    header_font = Font(name="맑은 고딕", size=9, bold=True, color="FFFFFF")
+    body_font   = Font(name="맑은 고딕", size=9)
+    warn_font   = Font(name="맑은 고딕", size=9, color="C00000")
     center      = Alignment(horizontal="center", vertical="center")
     thin = Side(style="thin", color="BFBFBF")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -780,7 +847,7 @@ def build_summary_sheet(wb, cases, results):
             신청일 = "미확인"
 
         dates = extract_key_dates(progress)
-        진행상황 = derive_progress_status(progress)   # ★ v11.1
+        진행상황 = derive_progress_status(progress, basic)
         인가폐지 = dates["인가폐지일"]
         if 인가폐지 not in ("", "미확인") and dates["인가폐지상태"]:
             인가폐지 = f'{인가폐지} ({dates["인가폐지상태"]})'
@@ -802,8 +869,6 @@ def build_summary_sheet(wb, cases, results):
             cell.border = border
             if v == "미확인":
                 cell.font = warn_font
-            elif c == 3:
-                cell.font = stage_font
             else:
                 cell.font = body_font
 
@@ -855,7 +920,6 @@ def save_results(results, path, cases=None):
     df = pd.DataFrame(rows)
     df = compute_flags(df)
 
-    # ★ v11.1: 분류 컬럼 계산 (색상 기준)
     df["분류"] = df["내용_rgb"].apply(categorize_color)
 
     wb = openpyxl.Workbook()
@@ -934,13 +998,10 @@ def save_results(results, path, cases=None):
         ws.column_dimensions["B"].width = 55
         ws.column_dimensions["C"].width = 22
         ws.column_dimensions["D"].width = 12
-        # E열 = 분류
         ws.column_dimensions["E"].width = 10
         for ci in range(6, len(all_headers) + 1):
             col_letter = openpyxl.utils.get_column_letter(ci)
             ws.column_dimensions[col_letter].width = 10
-        # 개별 플래그 컬럼 숨김 (분류/당부사항/열람대상은 보이게, 그 뒤 17개 숨김)
-        # all_headers: 1일자 2내용 3결과 4공시문 5분류 6당부사항 7열람대상 8~ 플래그
         for ci in range(8, len(all_headers) + 1):
             col_letter = openpyxl.utils.get_column_letter(ci)
             ws.column_dimensions[col_letter].hidden = True
@@ -968,7 +1029,7 @@ def run_crawl(cases, api_key, btpr_nm, output_path,
 
     total = len(cases)
     log("=" * 55)
-    log("  대법원 회생사건 자동 조회 v11")
+    log("  대법원 회생사건 자동 조회 v11.2")
     log("=" * 55)
 
     if not api_key:
